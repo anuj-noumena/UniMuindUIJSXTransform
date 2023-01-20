@@ -2,12 +2,8 @@ const { parse } = require("node-html-parser");
 var babel = require("@babel/core");
 var t = require("@babel/types");
 
-var jsxPropsTransform = require("./jsxPropsTransform");
-var snabbdom = require("snabbdom");
-var _set = require("lodash.set");
-var _get = require("lodash.get");
 const generate = require("@babel/generator").default;
-const contentLoaderPrefix = "__CONTENT__";
+
 function replaceTemplate(content) {
   let matches = content.match(/<\s*uc-template(.|\W*?)contentid=\"(.*?)\"/gi);
   let contentIds = {};
@@ -74,8 +70,7 @@ function generateCode(cText) {
           pragma: "jsx",
           pragmaFrag: "Fragment",
         },
-      ],
-      jsxPropsTransform,
+      ]
     ],
   });
   let genNewNode = (matches, path) => {
