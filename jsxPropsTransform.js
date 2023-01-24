@@ -76,7 +76,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
             t.identifier("insert"),
             t.arrowFunctionExpression(
               [t.identifier("vnode")],
-              t.arrowFunctionExpression([], t.assignmentExpression("=", refs.value.expression, t.identifier("vnode")))
+              t.assignmentExpression("=", refs.value.expression, t.identifier("vnode.elm"))
             )
           );
           path.node.attributes.push(t.jSXAttribute(t.jSXIdentifier("hook"), t.jsxExpressionContainer(t.objectExpression([insertHook]))));
