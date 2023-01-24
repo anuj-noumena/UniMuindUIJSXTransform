@@ -1,6 +1,7 @@
 const DataProviders = [
   "uc-data-handler",
   "uc-data-table",
+  "uc-data-template",
   "uc-table",
   "uc-data-repeater",
   "uc-repeater",
