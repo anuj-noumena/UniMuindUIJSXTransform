@@ -5,7 +5,7 @@ var t = require("@babel/types");
 const generate = require("@babel/generator").default;
 
 function replaceTemplate(content) {
-  let matches = content.match(/<\s*uc-template(.|\W*?)contentid=\"(.*?)\"/gi);
+  let matches = content.match(/<\s*uc-template[^>]*?contentid=\"(.*?)\"/gi);
   let contentIds = {};
   if (Array.isArray(matches)) {
     matches.map((m) => {
@@ -267,13 +267,12 @@ function generateCode(cText) {
               }
             }
           }
-
         } else {
           let pexp = findParentExpressionContainer(path);
           //console.log(literal);
           if (pexp) {
             wrapUcVnode(pexp, matches);
-          } 
+          }
           //wrap the expression
           //wrapUcVnode(el.parentPath, matches);
         }
