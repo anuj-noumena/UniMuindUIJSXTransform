@@ -9,6 +9,8 @@ const DataProviders = [
   "uc-data-form",
   "uc-data",
   "uc-table-col",
+  "uc-entity-toolbar-templates",
+  "uc-entity-toolbar-template",
 ];
 
 module.exports = function jsxPropsTransform({ types: t }) {
