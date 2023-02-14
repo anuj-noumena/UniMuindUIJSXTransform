@@ -1,7 +1,7 @@
 const { parse } = require("node-html-parser");
 var babel = require("@babel/core");
 var t = require("@babel/types");
-
+const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
 const generate = require("@babel/generator").default;
 
 function replaceTemplate(content) {
@@ -70,7 +70,7 @@ function generateCode(cText) {
           pragma: "jsx",
           pragmaFrag: "Fragment",
         },
-      ]
+      ],
     ],
   });
   let genNewNode = (matches, path) => {
@@ -90,27 +90,6 @@ function generateCode(cText) {
       t.jsxClosingElement(t.jsxIdentifier("uc-data")),
       [path]
     );
-  };
-  let memberXpressionToLiteral = (exp) => {
-    if (typeof exp == "string") {
-      return exp;
-    } else if (exp) {
-      let name = exp.name || "";
-      let property = (exp.property && exp.property.name) || "";
-      let strA = [];
-      if (name) {
-        strA.push(name);
-      }
-      if (exp.object) {
-        strA.push(memberXpressionToLiteral(exp.object));
-      }
-      if (property) {
-        strA.push(property);
-      }
-      if (strA.length > 0) {
-        return strA.join(".");
-      }
-    }
   };
 
   let isAttr = (path, el) => {
@@ -299,9 +278,7 @@ module.exports = function (source) {
   let imp = {};
   if (c) {
     cText = `
-     <Fragment>
       ${c.textContent.trim().replace(/(;)+$/, "")}
-     </Fragment>
     `;
     let o1 = replaceTemplate(cText);
     //cText = o1.content;
@@ -325,6 +302,7 @@ module.exports = function (source) {
            const _partialExtern = {};
            const $stateManager = new UniMindSoftwareUI.Utils.StateManager({});
            const $bind = $stateManager.state;
+           const loadPartialAsync = UniMindSoftwareUI.Utils.PartialContentParser.loadPartialAsync;
            const onReady = (fn) => {
               if(typeof fn == "function") _readyFn.fn = fn;
            }

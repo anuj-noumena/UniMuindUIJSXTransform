@@ -1,3 +1,5 @@
+const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
+
 const DataProviders = [
   "uc-data-handler",
   "uc-data-table",
@@ -27,14 +29,24 @@ module.exports = function jsxPropsTransform({ types: t }) {
       )
     );
   };
+
   return {
     name: "jsxPropsTransform",
     visitor: {
       JSXElement: function (path) {
         if (path.node.openingElement && path.node.openingElement.name.name == "uc-template") {
           let attrs = path.node.openingElement.attributes;
-          let contentId = attrs.find((node) => node.name && node.name.name == "contentid");
-          contentId = contentId && contentId.value ? contentId.value.value : null;
+          let contentIdVal = attrs.find((node) => node.name && node.name.name == "contentid");
+          let contentId;
+          let isContentIdExpression = false;
+          if (contentIdVal && contentIdVal.value) {
+            if (contentIdVal.value.type == "StringLiteral") {
+              contentId = JSON.stringify(contentIdVal.value.value);
+            } else if (contentIdVal.value.type == "JSXExpressionContainer") {
+              contentId = memberXpressionToLiteral(contentIdVal.value.expression);
+              isContentIdExpression = true;
+            }
+          }
           if (!contentId) {
             return t.jsxText("");
           }
@@ -55,13 +67,26 @@ module.exports = function jsxPropsTransform({ types: t }) {
             );
             path.node.openingElement.children = [];
           }
-          let replacer = t.callExpression(t.identifier(`_partialExtern[${JSON.stringify(contentId)}]`), [
-            t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
-          ]);
-          if (path.parentPath.node.type == "JSXElement") {
-            replacer = t.jsxExpressionContainer(replacer);
+          let replacer;
+          if (contentId) {
+            if (isContentIdExpression) {
+              replacer = t.callExpression(t.identifier(`loadPartialAsync`), [
+                t.identifier(contentId),
+                t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
+              ]);
+            } else {
+              replacer = t.callExpression(t.identifier(`_partialExtern[${contentId}]`), [
+                t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
+              ]);
+            }
+
+            //loadPartialAsync
+            if (path.parentPath.node.type == "JSXElement") {
+              replacer = t.jsxExpressionContainer(replacer);
+            }
+            path.replaceWith(replacer);
           }
-          path.replaceWith(replacer);
+
           // return t.jsxExpressionContainer(
           //   t.callExpression(t.identifier(`_partialExtern[${JSON.stringify(contentId)}]`), [
           //     t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
