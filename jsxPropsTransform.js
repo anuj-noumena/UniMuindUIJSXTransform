@@ -36,7 +36,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
       JSXElement: function (path) {
         if (path.node.openingElement && path.node.openingElement.name.name == "uc-template") {
           let attrs = path.node.openingElement.attributes;
-          let contentIdVal = attrs.find((node) => node.name && node.name.name == "contentid");
+          let contentIdVal = attrs.find((node) => node.name && node.name.name.toLowerCase() == "contentid");
           let contentId;
           let isContentIdExpression = false;
           if (contentIdVal && contentIdVal.value) {

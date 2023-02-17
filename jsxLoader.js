@@ -9,7 +9,7 @@ function replaceTemplate(content) {
   let contentIds = {};
   if (Array.isArray(matches)) {
     matches.map((m) => {
-      let contentid = m.match(/contentid="([^"]+)/);
+      let contentid = m.match(/contentid="([^"]+)/i);
       if (Array.isArray(contentid) && contentid.length == 2) {
         //content = content.replace(m, `{_partialExtern[${JSON.stringify(contentid[1])}](props)}`);
         contentIds[contentid[1]] = 1;
