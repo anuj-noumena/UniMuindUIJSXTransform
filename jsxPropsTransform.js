@@ -1,20 +1,5 @@
 const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
 
-const DataProviders = [
-  "uc-data-handler",
-  "uc-data-table",
-  "uc-data-template",
-  "uc-table",
-  "uc-data-repeater",
-  "uc-repeater",
-  "uc-form",
-  "uc-data-form",
-  "uc-data",
-  "uc-table-col",
-  "uc-entity-toolbar-templates",
-  "uc-entity-toolbar-template",
-];
-
 module.exports = function jsxPropsTransform({ types: t }) {
   const transformBindAttr = (props, tag) => {
     let v = props.value;
@@ -61,7 +46,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
           if (child && child.length > 0) {
             propAttrs.push(
               t.objectProperty(
-                t.identifier("__c"),
+                t.identifier("_children"),
                 t.arrowFunctionExpression([t.identifier("props")], t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child))
               )
             );
@@ -72,11 +57,14 @@ module.exports = function jsxPropsTransform({ types: t }) {
             if (isContentIdExpression) {
               replacer = t.callExpression(t.identifier(`loadPartialAsync`), [
                 t.identifier(contentId),
+
                 t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
+                t.identifier("Data"),
               ]);
             } else {
               replacer = t.callExpression(t.identifier(`_partialExtern[${contentId}]`), [
                 t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
+                t.identifier("Data"),
               ]);
             }
 
@@ -123,9 +111,8 @@ module.exports = function jsxPropsTransform({ types: t }) {
           let child = path.container.children;
           if (child && child.length > 0) {
             let cProps = [t.identifier("jsx")];
-            if (path && path.node && path.node.name && DataProviders.indexOf(path.node.name.name) >= 0) {
-              cProps.push(t.identifier("Data"));
-            }
+
+            cProps.push(t.identifier("Data"));
             // if (path.node.name.name.startsWith("uc-data-")) {
             //   cProps.push(t.identifier("Data"));
             // }
@@ -165,26 +152,27 @@ module.exports = function jsxPropsTransform({ types: t }) {
             }
           }
         });
+        if (path && path.node && path.node.name && path.node.name.name.startsWith("uc-")) {
+          //if (existingBind || existingListen) {
+            props.push(t.objectProperty(t.identifier("_sm"), t.identifier("$stateManager")));
+          //}
 
-        if (existingBind || existingListen) {
-          props.push(t.objectProperty(t.identifier("_sm"), t.identifier("$stateManager")));
-        }
+          if (existingBind) {
+            props.push(transformBindAttr(existingBind, "_bind"));
+          }
+          if (existingListen) {
+            props.push(transformBindAttr(existingListen, "_listen"));
+          }
 
-        if (existingBind) {
-          props.push(transformBindAttr(existingBind, "_bind"));
-        }
-        if (existingListen) {
-          props.push(transformBindAttr(existingListen, "_listen"));
-        }
-
-        if (path && path.node && path.node.name && DataProviders.indexOf(path.node.name.name) >= 0) {
           const newProp = t.objectProperty(t.identifier("_ParentData"), t.identifier("Data"));
           props.push(newProp);
         }
+
         if (props) {
           const newProp = t.jSXAttribute(t.jSXIdentifier("props"), t.jsxExpressionContainer(t.objectExpression(props)));
           path.node.attributes.push(newProp);
         }
+        
         if (on && on.length > 0) {
           const newProp = t.jSXAttribute(t.jSXIdentifier("on"), t.jsxExpressionContainer(t.objectExpression(on)));
           path.node.attributes.push(newProp);
