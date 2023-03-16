@@ -57,12 +57,13 @@ module.exports = function jsxPropsTransform({ types: t }) {
             if (isContentIdExpression) {
               replacer = t.callExpression(t.identifier(`loadPartialAsync`), [
                 t.identifier(contentId),
-
+                t.identifier("jsx"),
                 t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                 t.identifier("Data"),
               ]);
             } else {
               replacer = t.callExpression(t.identifier(`_partialExtern[${contentId}]`), [
+                t.identifier("jsx"),
                 t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                 t.identifier("Data"),
               ]);
@@ -74,12 +75,6 @@ module.exports = function jsxPropsTransform({ types: t }) {
             }
             path.replaceWith(replacer);
           }
-
-          // return t.jsxExpressionContainer(
-          //   t.callExpression(t.identifier(`_partialExtern[${JSON.stringify(contentId)}]`), [
-          //     t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
-          //   ])
-          // );
         }
       },
       JSXOpeningElement(path) {
@@ -113,6 +108,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
             let cProps = [t.identifier("jsx")];
 
             cProps.push(t.identifier("Data"));
+            cProps.push(t.assignmentPattern(t.identifier("_newProps"), t.objectExpression([])));
             // if (path.node.name.name.startsWith("uc-data-")) {
             //   cProps.push(t.identifier("Data"));
             // }
@@ -120,7 +116,21 @@ module.exports = function jsxPropsTransform({ types: t }) {
             props.push(
               t.objectProperty(
                 t.identifier("_children"),
-                t.arrowFunctionExpression(cProps, t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child))
+                t.arrowFunctionExpression(
+                  cProps,
+                  t.blockStatement([
+                    t.variableDeclaration("const", [t.variableDeclarator(t.identifier("oldProps"), t.identifier("props"))]),
+                    t.blockStatement([
+                      t.variableDeclaration("const", [
+                        t.variableDeclarator(
+                          t.identifier("props"),
+                          t.objectExpression([t.spreadElement(t.identifier("oldProps")), t.spreadElement(t.identifier("_newProps"))])
+                        ),
+                      ]),
+                      t.returnStatement(t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child)),
+                    ]),
+                  ])
+                )
               )
             );
             path.container.children = [];
@@ -154,7 +164,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
         });
         if (path && path.node && path.node.name && path.node.name.name.startsWith("uc-")) {
           //if (existingBind || existingListen) {
-            props.push(t.objectProperty(t.identifier("_sm"), t.identifier("$stateManager")));
+          props.push(t.objectProperty(t.identifier("_sm"), t.identifier("$stateManager")));
           //}
 
           if (existingBind) {
@@ -172,7 +182,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
           const newProp = t.jSXAttribute(t.jSXIdentifier("props"), t.jsxExpressionContainer(t.objectExpression(props)));
           path.node.attributes.push(newProp);
         }
-        
+
         if (on && on.length > 0) {
           const newProp = t.jSXAttribute(t.jSXIdentifier("on"), t.jsxExpressionContainer(t.objectExpression(on)));
           path.node.attributes.push(newProp);

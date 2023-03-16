@@ -3,6 +3,10 @@ var babel = require("@babel/core");
 var t = require("@babel/types");
 const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
 const generate = require("@babel/generator").default;
+let PostCss = require("postcss");
+let cssnano = require("cssnano");
+
+const postcss = PostCss([new cssnano()])
 
 function replaceTemplate(content) {
   let matches = content.match(/<\s*uc-template[^>]*?contentid=\"(.*?)\"/gi);
@@ -271,7 +275,7 @@ function generateCode(cText) {
   return output.code;
 }
 
-module.exports = function (source) {
+module.exports = async function (source) {
   let doc = parse(source);
   let c = doc.querySelector("#mainTemplate");
   let cText = "";
@@ -295,8 +299,19 @@ module.exports = function (source) {
   let impStr = "";
   const impK = Object.keys(imp);
 
+  let c3 = doc.querySelector("#mainStyle");
+  let css = '';
+  if (c3) {
+    c3 = c3.textContent.trim();
+    const result = await postcss.process(c3, { from: undefined });
+    if (result) {
+      css = result.css;
+    }
+  }
+
   impStr += `
            const Data = {};
+           export const mainStyle = "${css}";
            export const pageConfig = {};
            export const _readyFn = {fn: null};
            const _partialExtern = {};
