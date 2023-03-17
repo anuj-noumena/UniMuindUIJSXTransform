@@ -1,6 +1,6 @@
 const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
 
-export default function jsxPropsTransform({ types: t }) {
+module.exports = function jsxPropsTransform({ types: t }) {
   const transformBindAttr = (props, tag) => {
     let v = props.value;
     if (t.isJSXExpressionContainer(v)) {
@@ -200,4 +200,4 @@ export default function jsxPropsTransform({ types: t }) {
       },
     },
   };
-}
+};

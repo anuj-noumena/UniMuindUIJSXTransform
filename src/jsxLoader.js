@@ -1,11 +1,11 @@
-import { parse } from "node-html-parser";
-import * as babel from "@babel/core";
-import * as t from "@babel/types";
-import { memberXpressionToLiteral } from "./helpers";
-import  generate from "@babel/generator";
-import PostCss from "postcss";
-import cssnano from "cssnano";
-import litePreset from "cssnano-preset-lite";
+const { parse } = require("node-html-parser");
+var babel = require("@babel/core");
+var t = require("@babel/types");
+const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
+const generate = require("@babel/generator").default;
+let PostCss = require("postcss");
+let cssnano = require("cssnano");
+const litePreset = require("cssnano-preset-lite");
 
 const preset = litePreset({ discardComments: true, svgo: false });
 
@@ -278,7 +278,7 @@ function generateCode(cText) {
   return output.code;
 }
 
-export default async function (source) {
+module.exports = async function (source) {
   let doc = parse(source);
   let c = doc.querySelector("#mainTemplate");
   let cText = "";
@@ -318,7 +318,7 @@ export default async function (source) {
            export const pageConfig = {};
            export const _readyFn = {fn: null};
            const _partialExtern = {};
-           const $stateManager = new UniMindSoftwareUI.Utils.StateManager({});
+           export const $stateManager = new UniMindSoftwareUI.Utils.StateManager({});
            const $bind = $stateManager.state;
            const loadPartialAsync = UniMindSoftwareUI.Utils.PartialContentParser.loadPartialAsync;
            const onReady = (fn) => {
@@ -343,4 +343,4 @@ export default async function (source) {
     return ${cText}
   }`;
   return template;
-}
+};

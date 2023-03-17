@@ -20,4 +20,4 @@ const memberXpressionToLiteral = (exp) => {
   }
 };
 
-export { memberXpressionToLiteral };
+module.exports = { memberXpressionToLiteral };

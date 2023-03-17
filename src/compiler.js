@@ -1,21 +1,28 @@
-import jsxLoader from "./jsxLoader";
-import jsxPropsTransform from "./jsxPropsTransform";
-import Babel from "@babel/core";
+const jsxLoader = require("./jsxLoader");
+const jsxPropsTransform = require("./jsxPropsTransform");
+const Babel = require("@babel/core");
 
-export default compile = (src) => {
-  Babel.registerPlugin("jsxLoader", jsxLoader);
-  Babel.registerPlugin("jsxPropsTransform", jsxPropsTransform);
+module.exports = async (src) => {
+  src = await jsxLoader(src);
   var output = Babel.transform(src, {
-    presets: [
+    presets: [["@babel/preset-env", { targets: { chrome: "60" }, loose: true, modules: false }]],
+    plugins: [
       [
-        "react",
+        "@babel/plugin-proposal-class-properties",
+        {
+          loose: true,
+        },
+      ],
+      [
+        "@babel/plugin-transform-react-jsx",
         {
           pragma: "jsx",
           pragmaFrag: "Fragment",
         },
       ],
+      [jsxPropsTransform],
+      //["./node_modules/uniminduijsxtransform/jsxPropsTransform.js"]
     ],
-    plugins: ["jsxLoader", "jsxPropsTransform"],
   }).code;
 
   return output;
