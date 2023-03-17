@@ -1,9 +1,15 @@
-const memberXpressionToLiteral = (exp) => {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.memberXpressionToLiteral = void 0;
+const memberXpressionToLiteral = exp => {
   if (typeof exp == "string") {
     return exp;
   } else if (exp) {
     let name = exp.name || "";
-    let property = (exp.property && exp.property.name) || "";
+    let property = exp.property && exp.property.name || "";
     let strA = [];
     if (name) {
       strA.push(name);
@@ -19,5 +25,5 @@ const memberXpressionToLiteral = (exp) => {
     }
   }
 };
+exports.memberXpressionToLiteral = memberXpressionToLiteral;
 
-module.exports = { memberXpressionToLiteral };
