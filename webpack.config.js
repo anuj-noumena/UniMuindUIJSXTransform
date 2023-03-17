@@ -6,6 +6,9 @@ var fs = require("fs");
 
 module.exports = (env) => {
   return {
+    experiments: {
+      outputModule: true,
+    },
     optimization: {
       minimize: env.production ? true : false,
       minimizer: [new TerserPlugin({ test: /\.js(\?.*)?$/i })],
@@ -21,7 +24,7 @@ module.exports = (env) => {
       //   }
       //   return "[name]";
       // },
-      library: { type: "umd" },
+      library: { type: "module" },
       publicPath: "/",
     },
     module: {
