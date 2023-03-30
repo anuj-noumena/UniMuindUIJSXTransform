@@ -1,4 +1,5 @@
 const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
+const traverseForBind = require("./jsxBind").traverseForBind;
 
 module.exports = function jsxPropsTransform({ types: t }) {
   const transformBindAttr = (props, tag) => {
@@ -18,6 +19,10 @@ module.exports = function jsxPropsTransform({ types: t }) {
   return {
     name: "jsxPropsTransform",
     visitor: {
+      Program: (path, state) => {
+        //console.log(path, state)
+        traverseForBind(state.file.ast);
+      },
       JSXElement: function (path) {
         if (path.node.openingElement && path.node.openingElement.name.name == "uc-template") {
           let attrs = path.node.openingElement.attributes;
