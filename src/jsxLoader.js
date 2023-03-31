@@ -114,10 +114,9 @@ module.exports = async function (source) {
            const onReady = (fn) => {
               if(typeof fn == "function") _readyFn.fn = fn;
            }
-           export const __initialize = () => {
-              return UniMindSoftwareUI.Utils.PartialContentParser.loadPartials(${JSON.stringify(impK)}).then((out) => {
-                Object.keys(out).map(k => _partialExtern[k] = out[k]);
-              })
+           export const __initialize = async () => {
+              const result = await UniMindSoftwareUI.Utils.PartialContentParser.loadPartials(${JSON.stringify(impK)});
+              Object.keys(result).map(k => _partialExtern[k] = result[k]);
            };
     `;
 
