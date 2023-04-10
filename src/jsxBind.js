@@ -150,11 +150,13 @@ function prepareBindAttr(o, attr, isBind) {
     if (t.isJSXExpressionContainer(v)) {
       v = v.expression;
     }
+    if (v.properties.find((p) => p.key.name == attr.name.name)) {
+      bindedProps = [];
+    }
     bindedProps = bindedProps.concat(v.properties);
   }
   if (bindedProps.length > 0) {
     o.attributes.push(t.jSXAttribute(t.jSXIdentifier(bindAttr), t.jsxExpressionContainer(t.objectExpression(bindedProps))));
-    o.attributes.push(t.jSXAttribute(t.jSXIdentifier("_ParentData"), t.jsxExpressionContainer(t.identifier("Data"))));
   }
 }
 

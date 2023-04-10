@@ -53,7 +53,7 @@ function generateCode(cText) {
   return output.code;
 }
 
-function replaceTemplate(content) {
+function getTemplateTagContentIds(content) {
   let matches = content.match(/<\s*uc-template[^>]*?contentid=\"(.*?)\"/gi);
   let contentIds = {};
   if (Array.isArray(matches)) {
@@ -68,65 +68,50 @@ function replaceTemplate(content) {
   return { content, contentIds };
 }
 
+
 module.exports = async function (source) {
   let doc = parse(source || "");
-  let c = doc.querySelector("#mainTemplate");
-  let cText = "";
-  let imp = {};
-  if (c) {
-    cText = `
-      ${c.textContent.trim().replace(/(;)+$/, "")}
-    `.trim();
-    let o1 = replaceTemplate(cText);
-    //cText = o1.content;
-    imp = o1.contentIds;
-  }
-  let c2 = doc.querySelector("#mainScript");
-  let m = "";
-  if (c2) {
-    m = c2.textContent.trim();
-    let o1 = replaceTemplate(m);
-    //m = o1.content;
-    imp = { ...imp, ...o1.contentIds };
-  }
-  let impStr = "";
-  const impK = Object.keys(imp);
+  let tempDom = doc.querySelector("#mainTemplate");
+  const mainTemplate = tempDom ? tempDom.textContent.trim().replace(/(;)+$/, "") : "";
+  let tempCompids = getTemplateTagContentIds(mainTemplate);
+  let contentIds = tempCompids.contentIds;
 
-  let c3 = doc.querySelector("#mainStyle");
+  tempDom = doc.querySelector("#mainScript");
+  const mainScript = tempDom ? tempDom.textContent.trim() : "";
+  tempCompids = getTemplateTagContentIds(mainScript);
+  Object.assign(contentIds, tempCompids.contentIds);
+
+  tempDom = doc.querySelector("#mainStyle");
   let css = "";
-  if (c3) {
-    c3 = c3.textContent.trim();
-    const result = await postcss.process(c3, { from: undefined });
+  if (tempDom) {
+    const mainStyle = tempDom ? tempDom.textContent.trim() : "";
+    const result = await postcss.process(mainStyle, { from: undefined });
     if (result) {
       css = result.css;
     }
   }
 
-  impStr += `
-           const Data = {};
-           export const mainStyle = "${css}";
-           export const pageConfig = {};
-           export const _readyFn = {fn: null};
-           const _partialExtern = {};
-           export const $stateManager = new UniMindSoftwareUI.Utils.StateManager({});
-           const $bind = $stateManager.state;
-           const loadPartialAsync = UniMindSoftwareUI.Utils.PartialContentParser.loadPartialAsync;
-           const onReady = (fn) => {
-              if(typeof fn == "function") _readyFn.fn = fn;
-           }
-           export const __initialize = async () => {
-              const result = await UniMindSoftwareUI.Utils.PartialContentParser.loadPartials(${JSON.stringify(impK)});
-              Object.keys(result).map(k => _partialExtern[k] = result[k]);
-           };
-    `;
-
-  //cText = generateCode(cText);
-  //m = generateCode(m);
   let template = `
-  ${impStr}
+  const Data = {};
+  const _partialExtern = {};
+  const loadDynamicContentId = UniMindSoftwareUI.Utils.PartialContentParser.loadDynamicContentId;
+  export const mainStyle = "${css}";
+  export const pageConfig = {};
+  export const _readyFn = {fn: null};
+  export const $stateManager = new UniMindSoftwareUI.Utils.StateManager({uuid: "d11"});
+  const $bind = $stateManager.state;
+  const onReady = (fn) => {
+     if(typeof fn == "function") _readyFn.fn = fn;
+  }
 
-  ${m}
+  export const __initialize = async () => {
+    const result = await UniMindSoftwareUI.Utils.PartialContentParser.getLayoutRenderFns(${JSON.stringify(Object.keys(contentIds))});
+    Object.keys(result).map(k => _partialExtern[k] = result[k]);
+  };
+
+  ${mainScript}
+
+  export const __render = (jsx, Data, props) => ${mainTemplate || "null"};`;
   
-  export const __render = (jsx, props,  Data) => ${cText || "null"};`;
   return template;
 };

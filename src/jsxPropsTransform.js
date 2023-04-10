@@ -61,17 +61,17 @@ module.exports = function jsxPropsTransform({ types: t }) {
             let replacer;
             if (contentId) {
               if (isContentIdExpression) {
-                replacer = t.callExpression(t.identifier(`loadPartialAsync`), [
+                replacer = t.callExpression(t.identifier(`loadDynamicContentId`), [
                   t.identifier(contentId),
                   t.identifier("jsx"),
-                  t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                   t.identifier("Data"),
+                  t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                 ]);
               } else {
                 replacer = t.callExpression(t.identifier(`_partialExtern[${contentId}]`), [
                   t.identifier("jsx"),
-                  t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                   t.identifier("Data"),
+                  t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                 ]);
               }
 
@@ -147,7 +147,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
               path.container.children = [];
             }
           }
-          
+
           existingProps.forEach((prop) => {
             if (!prop.name && prop.type == "JSXSpreadAttribute") {
               //console.log(prop.argument);
