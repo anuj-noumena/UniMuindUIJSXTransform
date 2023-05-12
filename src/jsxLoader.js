@@ -98,8 +98,11 @@ module.exports = async function (source) {
   export const mainStyle = "${css}";
   export const pageConfig = {};
   export const _readyFn = {fn: null};
-  export const $stateManager = new UniMindSoftwareUI.Utils.StateManager({uuid: "d11"});
+  export const $stateManager = new UniMindSoftwareUI.Utils.StateManager({});
   const $bind = $stateManager.state;
+
+  //const __prepareChildren = UniMindSoftwareUI.Utils.PartialContentParser.prepareChildren;
+  
   const onReady = (fn) => {
      if(typeof fn == "function") _readyFn.fn = fn;
   }
@@ -111,7 +114,7 @@ module.exports = async function (source) {
 
   ${mainScript}
 
-  export const __render = (jsx, Data, props) => ${mainTemplate || "null"};`;
+  export const __render = (Data, props) => ${mainTemplate || "null"};`;
   
   return template;
 };

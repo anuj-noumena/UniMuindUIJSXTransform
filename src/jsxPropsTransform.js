@@ -16,11 +16,16 @@ module.exports = function jsxPropsTransform({ types: t }) {
     );
   };
 
+  const sm = t.logicalExpression(
+    "&&",
+    t.binaryExpression("!==", t.unaryExpression("typeof", t.identifier("$stateManager")), t.stringLiteral("undefined")),
+    t.identifier("$stateManager")
+  );
+
   return {
     name: "jsxPropsTransform",
     visitor: {
       Program: (path, state) => {
-        //console.log(path, state)
         traverseForBind(state.file.ast);
       },
       JSXElement: function (path) {
@@ -63,13 +68,11 @@ module.exports = function jsxPropsTransform({ types: t }) {
               if (isContentIdExpression) {
                 replacer = t.callExpression(t.identifier(`loadDynamicContentId`), [
                   t.identifier(contentId),
-                  t.identifier("jsx"),
                   t.identifier("Data"),
                   t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                 ]);
               } else {
                 replacer = t.callExpression(t.identifier(`_partialExtern[${contentId}]`), [
-                  t.identifier("jsx"),
                   t.identifier("Data"),
                   t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
                 ]);
@@ -116,30 +119,18 @@ module.exports = function jsxPropsTransform({ types: t }) {
             //props.push(t.objectProperty(t.identifier("_t"), t.identifier("that")));
             let child = path.container.children;
             if (child && child.length > 0) {
-              let cProps = [t.identifier("jsx")];
-
-              cProps.push(t.identifier("Data"));
-              cProps.push(t.assignmentPattern(t.identifier("_newProps"), t.objectExpression([])));
-              // if (path.node.name.name.startsWith("uc-data-")) {
-              //   cProps.push(t.identifier("Data"));
-              // }
-
               props.push(
                 t.objectProperty(
                   t.identifier("_children"),
                   t.arrowFunctionExpression(
-                    cProps,
-                    t.blockStatement([
-                      t.variableDeclaration("const", [t.variableDeclarator(t.identifier("oldProps"), t.identifier("props"))]),
-                      t.blockStatement([
-                        t.variableDeclaration("const", [
-                          t.variableDeclarator(
-                            t.identifier("props"),
-                            t.objectExpression([t.spreadElement(t.identifier("oldProps")), t.spreadElement(t.identifier("_newProps"))])
-                          ),
-                        ]),
-                        t.returnStatement(t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child)),
-                      ]),
+                    [t.restElement(t.identifier("args"))],
+                    t.callExpression(t.identifier(`UniMindSoftwareUI.Utils.PartialContentParser.prepareChildren`), [
+                      t.arrowFunctionExpression(
+                        [t.identifier("Data"), t.identifier("props"), t.identifier("$stateManager")],
+                        t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child)
+                      ),
+                      t.identifier(`args`),
+                      t.arrowFunctionExpression([], t.arrayExpression([t.identifier("Data"), t.identifier("props"), sm])),
                     ])
                   )
                 )
@@ -175,7 +166,8 @@ module.exports = function jsxPropsTransform({ types: t }) {
           });
           if (path && path.node && path.node.name && path.node.name.name.startsWith("uc-")) {
             //if (existingBind || existingListen) {
-            props.push(t.objectProperty(t.identifier("_sm"), t.identifier("$stateManager")));
+            props.push(t.objectProperty(t.identifier("_sm"), t.arrowFunctionExpression([], t.identifier("$stateManager"))));
+
             //}
 
             if (existingBind) {
@@ -185,7 +177,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
               props.push(transformBindAttr(existingListen, "_listen"));
             }
 
-            const newProp = t.objectProperty(t.identifier("_ParentData"), t.identifier("Data"));
+            const newProp = t.objectProperty(t.identifier("_ParentData"), t.arrowFunctionExpression([], t.identifier("Data")));
             props.push(newProp);
           }
 
@@ -209,7 +201,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
             path.node.attributes.push(newProp);
           }
         } catch (e) {
-          console.log(e, path);
+          console.log(e);
           throw e;
         }
       },
