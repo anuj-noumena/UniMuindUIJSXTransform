@@ -1,4 +1,4 @@
-const memberXpressionToLiteral = require("./helpers").memberXpressionToLiteral;
+const memberXpressionToLiteral = require("./helpers/memberXpressionToLiteral");
 const traverseForBind = require("./jsxBind").traverseForBind;
 
 module.exports = function jsxPropsTransform({ types: t }) {
