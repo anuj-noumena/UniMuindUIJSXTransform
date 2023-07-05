@@ -1,3 +1,5 @@
+/*The purpose of this loader is to transform the contentid into a format that can be used by the UniMindSoftwareUI framework.*/
+
 const { parse } = require("node-html-parser");
 var babel = require("@babel/core");
 
@@ -9,49 +11,6 @@ const litePreset = require("cssnano-preset-lite");
 const preset = litePreset({ discardComments: true, svgo: false });
 
 const postcss = PostCss([cssnano({ preset })]);
-
-function generateCode(cText) {
-  let ast = babel.parse(cText, {
-    presets: [
-      [
-        "@babel/preset-env",
-        {
-          loose: true,
-          modules: false,
-          useBuiltIns: false,
-          targets: {
-            browsers: ["last 2 versions", "safari >= 7"],
-          },
-        },
-      ],
-    ],
-    plugins: [
-      [
-        "@babel/plugin-proposal-class-properties",
-        {
-          loose: true,
-        },
-      ],
-      [
-        "@babel/plugin-transform-react-jsx",
-        {
-          pragma: "jsx",
-          pragmaFrag: "Fragment",
-        },
-      ],
-    ],
-  });
-
-  const output = generate(
-    ast,
-    {
-      type: "Program",
-      /* options */
-    },
-    cText
-  );
-  return output.code;
-}
 
 function getTemplateTagContentIds(content) {
   let matches = content.match(/<\s*uc-template[^>]*?contentid=\"(.*?)\"/gi);

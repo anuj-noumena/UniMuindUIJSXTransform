@@ -1,5 +1,5 @@
 function isUcJsxData(node) {
-  if (node && node.type == "CallExpression" && node.callee.name == "_ucJsxData") {
+  if (node.openingElement && node.openingElement.name.name == "uc-data" && node.openingElement.attributes) {
     return node;
   }
   return false;

@@ -1,3 +1,5 @@
+/*The purpose of this loader is to transform the JSX code in code into a format that can be used by the UniMindSoftwareUI framework.*/
+
 const memberXpressionToLiteral = require("./helpers/memberXpressionToLiteral");
 const traverseForBind = require("./jsxBind").traverseForBind;
 
@@ -159,7 +161,6 @@ module.exports = function jsxPropsTransform({ types: t }) {
                 if (t.isJSXExpressionContainer(v)) {
                   v = v.expression;
                 }
-
                 props.push(t.objectProperty(t.identifier(prop.name.name), v));
               }
             }

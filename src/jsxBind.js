@@ -16,19 +16,19 @@ const traverseForBind = (ast) => {
     MemberExpression: function (path) {
       let literal = memberXpressionToLiteral(path.node);
       let matches = [...new Set(literal.match(/^(\$bind|Data)\.[a-zA-Z_$0-9\.]+/g))];
-      
+
       if (matches.length > 0) {
         let el = getAttribute(path, "");
-        
-        if (el && el.node && ["_bind", "_listen"].indexOf(el.node.name.name) < 0 && el.node.value && el.node.value.expression) {
-          handleAttribute(path, el, matches, literal);
+
+        if (el && el.node && ["_bind", "_listen"].indexOf(el.node.name.name) < 0) {
+          if (el.node.value && el.node.value.expression) {
+            handleAttribute(path, el, matches, literal);
+          }
         } else {
-          
           let pexp = findParentExpressionContainer(path);
-          
+
           if (pexp) {
             wrapUcVnode(pexp, matches);
-            console.log("dshjdsh")
           }
         }
       }
