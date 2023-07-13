@@ -19,14 +19,12 @@ const traverseForBind = (ast) => {
 
       if (matches.length > 0) {
         let el = getAttribute(path, "");
-
         if (el && el.node && ["_bind", "_listen"].indexOf(el.node.name.name) < 0) {
           if (el.node.value && el.node.value.expression) {
             handleAttribute(path, el, matches, literal);
           }
         } else {
           let pexp = findParentExpressionContainer(path);
-
           if (pexp) {
             wrapUcVnode(pexp, matches);
           }

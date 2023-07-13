@@ -3,6 +3,11 @@
 const memberXpressionToLiteral = require("./helpers/memberXpressionToLiteral");
 const traverseForBind = require("./jsxBind").traverseForBind;
 
+const doesNodeSupportsData = (path) =>
+  path.node &&
+  path.node.name &&
+  (path.node.name.name.startsWith("uc-") || (path.node.name.name != "Fragment" && /[A-Z]/.test(path.node.name.name.charAt(0))));
+
 module.exports = function jsxPropsTransform({ types: t }) {
   const transformBindAttr = (props, tag) => {
     let v = props.value;
@@ -116,7 +121,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
           );
           let props = [];
           let on = [];
-          if (path.node && path.node.name && path.node.name.name.startsWith("uc-")) {
+          if (doesNodeSupportsData(path)) {
             //props.push(t.objectProperty(t.identifier("_d"), t.identifier("Data")));
             //props.push(t.objectProperty(t.identifier("_t"), t.identifier("that")));
             let child = path.container.children;
@@ -165,7 +170,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
               }
             }
           });
-          if (path && path.node && path.node.name && path.node.name.name.startsWith("uc-")) {
+          if (doesNodeSupportsData(path)) {
             //if (existingBind || existingListen) {
             props.push(t.objectProperty(t.identifier("_sm"), t.arrowFunctionExpression([], t.identifier("$stateManager"))));
 
@@ -177,9 +182,15 @@ module.exports = function jsxPropsTransform({ types: t }) {
             if (existingListen) {
               props.push(transformBindAttr(existingListen, "_listen"));
             }
-
-            const newProp = t.objectProperty(t.identifier("_ParentData"), t.arrowFunctionExpression([], t.identifier("Data")));
-            props.push(newProp);
+            if (path.node.name.name.startsWith("uc-")) {
+              const newProp = t.objectProperty(t.identifier("_ParentData"), t.arrowFunctionExpression([], t.identifier("Data")));
+              props.push(newProp);
+            } else {
+              console.log(path.node.name.name);
+              const newProp = t.jSXAttribute(t.jSXIdentifier("Data"), t.jsxExpressionContainer(t.identifier("Data")));
+              //props.push(newProp);
+              path.node.attributes.push(newProp);
+            }
           }
 
           if (props) {

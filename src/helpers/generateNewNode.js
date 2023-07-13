@@ -1,6 +1,19 @@
 const t = require("@babel/types");
 
 function generateNewNode(matches, path) {
+  let exp = path;
+  if (path.type == "JSXExpressionContainer") {
+    exp = path.expression;
+  }
+  return t.jsxExpressionContainer(
+    t.callExpression(t.identifier(`UniMindSoftwareUI.Utils.PartialContentParser.bindNode`), [
+      t.identifier("Data"),
+      t.identifier("props"),
+      t.identifier("$stateManager"),
+      t.arrowFunctionExpression([], exp),
+      t.arrowFunctionExpression([], t.arrayExpression(matches.map((v, i) => t.identifier(v)))),
+    ])
+  );
   return t.jsxElement(
     t.jsxOpeningElement(t.jsxIdentifier("uc-data"), [
       t.jsxAttribute(
