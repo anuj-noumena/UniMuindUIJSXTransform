@@ -29,6 +29,20 @@ module.exports = function jsxPropsTransform({ types: t }) {
     t.identifier("$stateManager")
   );
 
+  const buildChildren = (child) => {
+    return t.arrowFunctionExpression(
+      [t.restElement(t.identifier("args"))],
+      t.callExpression(t.identifier(`UniMindSoftwareUI.Utils.PartialContentParser.prepareChildren`), [
+        t.arrowFunctionExpression(
+          [t.identifier("Data"), t.identifier("props"), t.identifier("$stateManager")],
+          t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child)
+        ),
+        t.identifier(`args`),
+        t.arrowFunctionExpression([], t.arrayExpression([t.identifier("Data"), t.identifier("props"), sm])),
+      ])
+    );
+  };
+
   return {
     name: "jsxPropsTransform",
     visitor: {
@@ -47,27 +61,39 @@ module.exports = function jsxPropsTransform({ types: t }) {
                 contentId = JSON.stringify(contentIdVal.value.value);
               } else if (contentIdVal.value.type == "JSXExpressionContainer") {
                 contentId = memberXpressionToLiteral(contentIdVal.value.expression);
+                if (contentIdVal.value.expression.type == "StringLiteral") {
+                  contentId = JSON.stringify(contentId);
+                }
                 isContentIdExpression = true;
               }
             }
             if (!contentId) {
               return t.jsxText("");
             }
-            let propAttrs = attrs.map((a) => {
-              let v = a.value;
-              if (t.isJSXExpressionContainer(v)) {
-                v = v.expression;
-              }
-              return t.objectProperty(t.identifier(a.name.name), v);
-            });
+
+            const bindProps = attrs
+              .filter((node) => node.name && ["_bind", "_listen"].indexOf(node.name.name) >= 0)
+              .map((a) => {
+                let v = a.value;
+                if (t.isJSXExpressionContainer(v)) {
+                  v = v.expression;
+                }
+                return v;
+              });
+
+            let propAttrs = attrs
+              .filter((node) => node && node.name && ["_bind", "_listen"].indexOf(node.name.name) < 0)
+              .map((a) => {
+                let v = a.value;
+                if (t.isJSXExpressionContainer(v)) {
+                  v = v.expression;
+                }
+                return t.objectProperty(t.identifier(a.name.name), v);
+              });
+
             let child = path.node.openingElement.children;
             if (child && child.length > 0) {
-              propAttrs.push(
-                t.objectProperty(
-                  t.identifier("_children"),
-                  t.arrowFunctionExpression([t.identifier("props")], t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child))
-                )
-              );
+              propAttrs.push(t.objectProperty(t.identifier("_children"), buildChildren(child)));
               path.node.openingElement.children = [];
             }
             let replacer;
@@ -76,12 +102,16 @@ module.exports = function jsxPropsTransform({ types: t }) {
                 replacer = t.callExpression(t.identifier(`loadDynamicContentId`), [
                   t.identifier(contentId),
                   t.identifier("Data"),
-                  t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
+                  t.arrowFunctionExpression([], t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs])),
+                  t.identifier("$stateManager"),
+                  t.arrowFunctionExpression([], t.arrayExpression(bindProps)),
                 ]);
               } else {
                 replacer = t.callExpression(t.identifier(`_partialExtern[${contentId}]`), [
                   t.identifier("Data"),
-                  t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs]),
+                  t.arrowFunctionExpression([], t.objectExpression([t.spreadElement(t.identifier("props")), ...propAttrs])),
+                  t.identifier("$stateManager"),
+                  t.arrowFunctionExpression([], t.arrayExpression(bindProps)),
                 ]);
               }
 
@@ -93,7 +123,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
             }
           }
         } catch (e) {
-          console.log(e, path);
+          console.log(e);
           throw e;
         }
       },
@@ -126,22 +156,7 @@ module.exports = function jsxPropsTransform({ types: t }) {
             //props.push(t.objectProperty(t.identifier("_t"), t.identifier("that")));
             let child = path.container.children;
             if (child && child.length > 0) {
-              props.push(
-                t.objectProperty(
-                  t.identifier("_children"),
-                  t.arrowFunctionExpression(
-                    [t.restElement(t.identifier("args"))],
-                    t.callExpression(t.identifier(`UniMindSoftwareUI.Utils.PartialContentParser.prepareChildren`), [
-                      t.arrowFunctionExpression(
-                        [t.identifier("Data"), t.identifier("props"), t.identifier("$stateManager")],
-                        t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), child)
-                      ),
-                      t.identifier(`args`),
-                      t.arrowFunctionExpression([], t.arrayExpression([t.identifier("Data"), t.identifier("props"), sm])),
-                    ])
-                  )
-                )
-              );
+              props.push(t.objectProperty(t.identifier("_children"), buildChildren(child)));
               path.container.children = [];
             }
           }

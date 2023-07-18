@@ -40,11 +40,11 @@ const handleAttribute = (path, el, matches, literal) => {
   let elName = el.parentPath.container.openingElement.name.name;
 
   if (elName.startsWith("uc-")) {
-    if (elName == "uc-template") {
-      wrapUcVnode(el.parentPath, matches);
-    } else {
+    //if (elName == "uc-template") {
+      //wrapUcVnode(el.parentPath, matches);
+    //} else {
       prepareBindAttr(elO, el.node, memberXpressionToLiteral(el.node.value.expression) == literal);
-    }
+    //}
   } else {
     if (memberXpressionToLiteral(el.node.value.expression) == literal && el.node.name.name == "value") {
       handleValueAttribute(elO, el);

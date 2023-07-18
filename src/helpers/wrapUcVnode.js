@@ -20,8 +20,12 @@ function wrapUcVnode(path, matches) {
       path.parentPath.skip();
     } else {
       let newEl = generateNewNode(matches, path.node);
-      path.replaceWith(newEl);
-      path.skip();
+      try {
+        path.replaceWith(newEl);
+        path.skip();
+      } catch (e) {
+        console.log(path.node.expression);
+      }
     }
   }
 }

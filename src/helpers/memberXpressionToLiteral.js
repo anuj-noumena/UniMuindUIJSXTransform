@@ -1,7 +1,9 @@
 const memberXpressionToLiteral = (exp) => {
   if (typeof exp == "string") {
     return exp;
-  } else if (exp) {
+  } else if (exp && exp.type == "StringLiteral") {
+    return exp.value;
+  } else if(exp){
     let name = exp.name || "";
     let property = (exp.property && exp.property.name) || "";
     let strA = [];
