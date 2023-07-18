@@ -4,6 +4,7 @@ const generateNewNode = require("./generateNewNode");
 const findParentVnode = require("./findParentVnode");
 const appendBindProp = require("./appendBindProp");
 const isUcJsxData = require("./isUcJsxData");
+const memberXpressionToLiteral = require("./memberXpressionToLiteral");
 
 function wrapUcVnode(path, matches) {
   let mObj = {};
@@ -19,13 +20,18 @@ function wrapUcVnode(path, matches) {
       path.parentPath.replaceWith(newEl);
       path.parentPath.skip();
     } else {
-      let newEl = generateNewNode(matches, path.node);
       try {
-        path.replaceWith(newEl);
-        path.skip();
+        let newEl = generateNewNode(matches, path.node);
+        if (path.container) {
+          path.replaceWith(newEl);
+        } else {
+          path.node.expression.value = newEl.expression.value;
+        }
       } catch (e) {
-        console.log(path.node.expression);
+        console.log(path.replaceWith, replaceNode, replaceNode.replaceWith);
       }
+
+      path.skip();
     }
   }
 }
